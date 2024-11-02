@@ -22,7 +22,7 @@ app.use(cookieParser());
 // origin: process.env.ORIGIN,
 app.use(
     cors({
-        origin: ['*'],
+        origin: ['https://client-amber-one-89.vercel.app/'],
         credentials: true,
     })
 );
