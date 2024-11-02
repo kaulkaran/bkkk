@@ -24,7 +24,7 @@ exports.app.use((0, cookie_parser_1.default)());
 // cors => cross origin resource sharing
 // origin: process.env.ORIGIN,
 exports.app.use((0, cors_1.default)({
-    origin: ['*'],
+    origin: ['https://client-amber-one-89.vercel.app'],
     credentials: true,
 }));
 // app.use(cors({ origin: process.env.ORIGIN, credentials: true, }))
