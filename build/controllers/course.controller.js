@@ -15,7 +15,6 @@ const path_1 = __importDefault(require("path"));
 const ejs_1 = __importDefault(require("ejs"));
 const sendMail_1 = __importDefault(require("../utils/sendMail"));
 const notification_Model_1 = __importDefault(require("../models/notification.Model"));
-const axios_1 = __importDefault(require("axios"));
 // upload course
 exports.uploadCourse = (0, catchAsyncErrors_1.CatchAsyncError)(async (req, res, next) => {
     try {
@@ -330,14 +329,10 @@ exports.deleteCourse = (0, catchAsyncErrors_1.CatchAsyncError)(async (req, res, 
 exports.generateVideoUrl = (0, catchAsyncErrors_1.CatchAsyncError)(async (req, res, next) => {
     try {
         const { videoId } = req.body;
-        const response = await axios_1.default.post(`https://dev.vdocipher.com/api/videos/${videoId}/otp`, { ttl: 300 }, {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                Authorization: `Apisecret ${process.env.VDOCIPHER_API_SECRET}`,
-            },
-        });
-        res.json(response.data);
+        // Construct the Google Drive embed URL
+        const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+        // Respond with the embed URL
+        res.json({ embedUrl });
     }
     catch (error) {
         return next(new ErrorHandler_1.default(error.message, 400));
