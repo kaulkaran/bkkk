@@ -111,8 +111,9 @@ exports.newPayment = (0, catchAsyncErrors_1.CatchAsyncError)(async (req, res, ne
                 company: "QualtSpire",
             },
             automatic_payment_methods: {
-                enabled: true,
+                enabled: false,
             },
+            payment_method_types: ["card"],
             shipping: {
                 name: "Harmik Lathiya",
                 address: {
