@@ -15,30 +15,34 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendMail = async (options: EmailOptions): Promise<void> => {
   const { email, subject, template, data } = options;
 
-  // Resolve EJS template path
-  const templatePath = path.join(__dirname, "../mails", template);
-
-  // Check template existence
-  if (!fs.existsSync(templatePath)) {
-    console.error(`❌ Template not found: ${templatePath}`);
-    throw new Error(`Email template not found: ${template}`);
-  }
-
-  // Render the EJS template
-  const html = await ejs.renderFile(templatePath, data);
-
   try {
-    const response = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || "QualtSpire <onboarding@resend.dev>",
+    // Build the absolute path to the template file
+    const templatePath = path.join(__dirname, "../mails", template);
+
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`Template file not found: ${templatePath}`);
+    }
+
+    // Render EJS template
+    const html = await ejs.renderFile(templatePath, data);
+
+    // Send email using Resend
+    const { data: result, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL as string,
       to: email,
       subject,
       html,
     });
 
-    console.log("✅ Email sent successfully:", response);
-  } catch (error) {
-    console.error("❌ Error sending email:", error);
-    throw new Error("Failed to send email");
+    if (error) {
+      console.error("❌ Email send failed:", error);
+      throw new Error(error.message);
+    }
+
+    console.log("✅ Email sent successfully:", result);
+  } catch (err: any) {
+    console.error("💥 sendMail error:", err.message);
+    throw new Error(err.message);
   }
 };
 
