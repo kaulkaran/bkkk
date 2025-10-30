@@ -3,31 +3,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-require('dotenv').config();
-const nodemailer_1 = __importDefault(require("nodemailer"));
+const resend_1 = require("resend");
 const ejs_1 = __importDefault(require("ejs"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
 const sendMail = async (options) => {
-    const transporter = nodemailer_1.default.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        service: process.env.SMTP_SERVICE,
-        auth: {
-            user: process.env.SMTP_MAIL,
-            pass: process.env.SMTP_PASSWORD,
-        },
-    });
     const { email, subject, template, data } = options;
-    // get the pdath to the email template file
-    const templatePath = path_1.default.join(__dirname, '../mails', template);
-    // Render the email template with EJS
+    // Resolve EJS template path
+    const templatePath = path_1.default.join(__dirname, "../mails", template);
+    // Check template existence
+    if (!fs_1.default.existsSync(templatePath)) {
+        console.error(`❌ Template not found: ${templatePath}`);
+        throw new Error(`Email template not found: ${template}`);
+    }
+    // Render the EJS template
     const html = await ejs_1.default.renderFile(templatePath, data);
-    const mailOptions = {
-        from: process.env.SMTP_MAIL,
-        to: email,
-        subject,
-        html
-    };
-    await transporter.sendMail(mailOptions);
+    try {
+        const response = await resend.emails.send({
+            from: process.env.RESEND_FROM_EMAIL || "QualtSpire <onboarding@resend.dev>",
+            to: email,
+            subject,
+            html,
+        });
+        console.log("✅ Email sent successfully:", response);
+    }
+    catch (error) {
+        console.error("❌ Error sending email:", error);
+        throw new Error("Failed to send email");
+    }
 };
 exports.default = sendMail;
