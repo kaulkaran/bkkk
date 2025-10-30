@@ -17,7 +17,7 @@ const sendMail = async (options) => {
         const html = await ejs_1.default.renderFile(templatePath, data);
         // 2️⃣ Define your sender (must match verified domain or Resend onboarding email)
         // You can use "Your Brand Name <onboarding@resend.dev>" until you verify your own domain.
-        const fromAddress = 'QualtSpire <onboarding@resend.dev>';
+        const fromAddress = 'QualtSpire <onboarding@iplbuzzofficial.in>';
         // 3️⃣ Send email using Resend API
         const { data: sentData, error } = await resend.emails.send({
             from: fromAddress,
