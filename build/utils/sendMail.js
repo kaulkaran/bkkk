@@ -6,34 +6,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const resend_1 = require("resend");
 const ejs_1 = __importDefault(require("ejs"));
 const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
 const sendMail = async (options) => {
-    const { email, subject, template, data } = options;
     try {
-        // Build the absolute path to the template file
-        const templatePath = path_1.default.join(__dirname, "../mails", template);
-        if (!fs_1.default.existsSync(templatePath)) {
-            throw new Error(`Template file not found: ${templatePath}`);
-        }
-        // Render EJS template
+        const { email, subject, template, data } = options;
+        // 1️⃣ Load and render your EJS email template
+        const templatePath = path_1.default.join(__dirname, '../mails', template);
         const html = await ejs_1.default.renderFile(templatePath, data);
-        // Send email using Resend
-        const { data: result, error } = await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL,
+        // 2️⃣ Define your sender (must match verified domain or Resend onboarding email)
+        // You can use "Your Brand Name <onboarding@resend.dev>" until you verify your own domain.
+        const fromAddress = 'QualtSpire <onboarding@resend.dev>';
+        // 3️⃣ Send email using Resend API
+        const { data: sentData, error } = await resend.emails.send({
+            from: fromAddress,
             to: email,
             subject,
             html,
         });
+        // 4️⃣ Log for debugging
         if (error) {
-            console.error("❌ Email send failed:", error);
-            throw new Error(error.message);
+            console.error('❌ Email send failed:', error);
+            throw new Error(`Email send failed: ${error.message}`);
         }
-        console.log("✅ Email sent successfully:", result);
+        console.log('✅ Email sent successfully:', sentData);
     }
     catch (err) {
-        console.error("💥 sendMail error:", err.message);
-        throw new Error(err.message);
+        console.error('💥 sendMail error:', err.message);
+        throw err;
     }
 };
 exports.default = sendMail;

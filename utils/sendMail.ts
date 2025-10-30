@@ -1,7 +1,8 @@
-import { Resend } from "resend";
-import ejs from "ejs";
-import path from "path";
-import fs from "fs";
+import { Resend } from 'resend';
+import ejs from 'ejs';
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config();
 
 interface EmailOptions {
   email: string;
@@ -13,36 +14,35 @@ interface EmailOptions {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendMail = async (options: EmailOptions): Promise<void> => {
-  const { email, subject, template, data } = options;
-
   try {
-    // Build the absolute path to the template file
-    const templatePath = path.join(__dirname, "../mails", template);
+    const { email, subject, template, data } = options;
 
-    if (!fs.existsSync(templatePath)) {
-      throw new Error(`Template file not found: ${templatePath}`);
-    }
-
-    // Render EJS template
+    // 1️⃣ Load and render your EJS email template
+    const templatePath = path.join(__dirname, '../mails', template);
     const html = await ejs.renderFile(templatePath, data);
 
-    // Send email using Resend
-    const { data: result, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL as string,
+    // 2️⃣ Define your sender (must match verified domain or Resend onboarding email)
+    // You can use "Your Brand Name <onboarding@resend.dev>" until you verify your own domain.
+    const fromAddress = 'QualtSpire <onboarding@resend.dev>';
+
+    // 3️⃣ Send email using Resend API
+    const { data: sentData, error } = await resend.emails.send({
+      from: fromAddress,
       to: email,
       subject,
       html,
     });
 
+    // 4️⃣ Log for debugging
     if (error) {
-      console.error("❌ Email send failed:", error);
-      throw new Error(error.message);
+      console.error('❌ Email send failed:', error);
+      throw new Error(`Email send failed: ${error.message}`);
     }
 
-    console.log("✅ Email sent successfully:", result);
+    console.log('✅ Email sent successfully:', sentData);
   } catch (err: any) {
-    console.error("💥 sendMail error:", err.message);
-    throw new Error(err.message);
+    console.error('💥 sendMail error:', err.message);
+    throw err;
   }
 };
 
