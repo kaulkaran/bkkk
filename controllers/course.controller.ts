@@ -468,19 +468,56 @@ export const deleteCourse = CatchAsyncError(
 );
 
 // generate video url
+// export const generateVideoUrl = CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const { videoId } = req.body;
+
+//       // Construct the Google Drive embed URL
+//       const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+
+//       // Respond with the embed URL
+//       res.json({ embedUrl });
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
 export const generateVideoUrl = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { videoId } = req.body;
+      const { videoLink }: { videoLink: string } = req.body;
 
-      // Construct the Google Drive embed URL
-      const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+      let embedUrl: string;
+      let videoId: string | null = null;
 
-      // Respond with the embed URL
+      if (!videoLink) {
+        return next(new ErrorHandler('Video link is required', 400));
+      }
+
+      // Check if it's a Google Drive link and extract video ID
+      const googleDriveMatch = videoLink.match(/https:\/\/drive\.google\.com\/file\/d\/([^\/]+)\/?/);
+      if (googleDriveMatch) {
+        videoId = googleDriveMatch[1];
+        embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+      } else {
+        // Check if it's a Vimeo link and extract video ID
+        // Vimeo links can be https://vimeo.com/{videoId} or https://player.vimeo.com/video/{videoId}
+        const vimeoMatch = videoLink.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+        if (vimeoMatch) {
+          videoId = vimeoMatch[1];
+          embedUrl = `https://player.vimeo.com/video/${videoId}?quality=720p&audiotrack=main&texttrack=en`;
+        } else {
+          return next(new ErrorHandler('Unsupported or invalid video link', 400));
+        }
+      }
+
       res.json({ embedUrl });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
+
 
