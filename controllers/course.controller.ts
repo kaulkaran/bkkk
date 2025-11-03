@@ -468,21 +468,56 @@ export const deleteCourse = CatchAsyncError(
 );
 
 //generate video url
+// export const generateVideoUrl = CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const { videoId } = req.body;
+
+//       // Construct the Google Drive embed URL
+//       const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+
+//       // Respond with the embed URL
+//       res.json({ embedUrl });
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
 export const generateVideoUrl = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { videoId } = req.body;
 
-      // Construct the Google Drive embed URL
-      const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
+      let embedUrl = "";
 
-      // Respond with the embed URL
+      // Case 1: Google Drive video
+      if (
+        videoId.includes("drive.google.com") ||
+        /^[a-zA-Z0-9_-]{20,}$/.test(videoId)
+      ) {
+        const driveId = videoId.includes("drive.google.com")
+          ? videoId.split("/d/")[1]?.split("/")[0]
+          : videoId;
+        embedUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+      }
+      // Case 2: Vimeo video
+      else if (videoId.includes("vimeo.com") || /^[0-9]+$/.test(videoId)) {
+        const vimeoId = videoId.includes("vimeo.com")
+          ? videoId.split("/").pop()
+          : videoId;
+        embedUrl = `https://player.vimeo.com/video/${vimeoId}?quality=720p&audiotrack=main&texttrack=en`;
+      } else {
+        throw new Error("Invalid video ID or unsupported platform");
+      }
+
       res.json({ embedUrl });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
+
 
 
 
