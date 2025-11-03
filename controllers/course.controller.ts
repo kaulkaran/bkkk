@@ -467,85 +467,23 @@ export const deleteCourse = CatchAsyncError(
   }
 );
 
-// generate video url
-// export const generateVideoUrl = CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { videoId } = req.body;
-
-//       // Construct the Google Drive embed URL
-//       const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
-
-//       // Respond with the embed URL
-//       res.json({ embedUrl });
-//     } catch (error: any) {
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
-
-
-// generate video url
+//generate video url
 export const generateVideoUrl = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let { videoLink }: { videoLink: any } = req.body;
+      const { videoId } = req.body;
 
-      // 🧠 Step 1: Validate input
-      if (!videoLink) {
-        return next(new ErrorHandler("Video link is required", 400));
-      }
+      // Construct the Google Drive embed URL
+      const embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
 
-      // Handle cases where frontend sends { videoLink: { videoLink: "..." } }
-      if (typeof videoLink !== "string") {
-        if (typeof videoLink === "object" && videoLink.videoLink) {
-          videoLink = videoLink.videoLink;
-        } else {
-          return next(new ErrorHandler("Invalid video link format", 400));
-        }
-      }
-
-      // Log for debugging
-      console.log("Processed videoLink:", videoLink);
-
-      let embedUrl: string | null = null;
-      let videoId: string | null = null;
-
-      // 🟢 Step 2: Detect Google Drive link
-      const googleDriveMatch = videoLink.match(
-        /https?:\/\/drive\.google\.com\/file\/d\/([^\/\?]+)/i
-      );
-      if (googleDriveMatch) {
-        videoId = googleDriveMatch[1];
-        embedUrl = `https://drive.google.com/file/d/${videoId}/preview`;
-
-        return res.status(200).json({
-          success: true,
-          platform: "Google Drive",
-          embedUrl,
-        });
-      }
-
-      const vimeoMatch = videoLink.match(
-        /https?:\/\/(?:www\.)?(?:player\.)?vimeo\.com\/(?:video\/)?(\d+)/i
-      );
-      if (vimeoMatch) {
-        videoId = vimeoMatch[1];
-        embedUrl = `https://player.vimeo.com/video/${videoId}?quality=720p&audiotrack=main&texttrack=en`;
-
-        return res.status(200).json({
-          success: true,
-          platform: "Vimeo",
-          embedUrl,
-        });
-      }
-
-      return next(new ErrorHandler("Unsupported or invalid video link", 400));
+      // Respond with the embed URL
+      res.json({ embedUrl });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
+
 
 
 
